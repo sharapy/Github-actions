@@ -2,7 +2,7 @@ name: Deploy Lambda Function
 on: [push]
 
 jobs:
-
+  
   lint:
     runs-on: ubuntu-latest
     steps: 
@@ -79,6 +79,8 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      BUCKET_NAME: my-bucket-makeba-makebaa
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v2
@@ -91,11 +93,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Upload to S3
-        run: aws s3 cp ${{ github.sha }}.zip s3://mera-bucket-laralappa/${{ github.sha }}.zip
+        run: aws s3 cp ${{ github.sha }}.zip s3://${{ env.BUCKET_NAME }}/${{ github.sha }}.zip
 
   test:
     runs-on: ubuntu-latest
     needs: upload
+    env:
+      BUCKET_NAME: my-bucket-makeba-makebaa
     strategy:
       matrix: 
         input: ["Hello", "Hi"]
@@ -110,7 +114,7 @@ jobs:
       - name: create test function
         run: |
           aws lambda create-function --function-name test-function-${{ matrix.input }} \
-          --code S3Bucket=mera-bucket-laralappa,S3Key=${{ github.sha }}.zip \
+          --code S3Bucket=${{ env.BUCKET_NAME }},S3Key=${{ github.sha }}.zip \
           --handler lambda_function.lambda_handler --runtime python3.8 \
           --role arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/my-lambda-role
       - name: Invoke test functions
@@ -131,6 +135,8 @@ jobs:
   deploy: 
     runs-on: ubuntu-latest
     needs: test
+    env:
+      BUCKET_NAME: my-bucket-makeba-makebaa
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -143,7 +149,7 @@ jobs:
         run: |
           aws lambda update-function-code \
           --function-name my-function \
-          --s3-bucket mera-bucket-laralappa \
+          --s3-bucket ${{ env.BUCKET_NAME }} \
           --s3-key ${{ github.sha }}.zip \
           --publish
 
