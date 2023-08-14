@@ -116,7 +116,7 @@ jobs:
           aws lambda create-function --function-name test-function-${{ matrix.input }} \
           --code S3Bucket=${{ env.BUCKET_NAME }},S3Key=${{ github.sha }}.zip \
           --handler lambda_function.lambda_handler --runtime python3.8 \
-          --role arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/my-lambda-role
+          --role arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/lambda-role
       - name: Invoke test functions
         run: |
           aws lambda invoke --function-name test-function-${{ matrix.input }} \
@@ -130,7 +130,7 @@ jobs:
         run: sleep 30
       - name: Destroy test function
         if: ${{ always() }}
-        run: aws lambda delete-function --function-name test-function${{ matrix.input }}
+        run: aws lambda delete-function --function-name test-function-${{ matrix.input }}
           
   deploy: 
     runs-on: ubuntu-latest
